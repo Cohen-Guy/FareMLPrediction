@@ -8,7 +8,7 @@ class PrepareDataset:
 
     def __init__(self):
         self.amadeus_client = Client(client_id='rPUxmofxNT5y0SVlynGKGVxYYwpdv81r', client_secret='fGyqtjXAceJKYq4d')
-        self.data_folder_path = os.path.join(os.path.dirname(__file__), 'data', 'prepare')
+        self.data_folder_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'prepare')
         self.first_csv_write = True
         airports_top_50_and_tel_aviv_iata_location_codes_list = ['TLV', 'IST', 'AMS', 'FRA', 'DME', 'SVO', 'SAW', 'CDG', 'MAD', 'LED', 'LHR', 'ATH',
                                     'ORY', 'BCN', 'VKO', 'PMI', 'MUC', 'FCO', 'LIS', 'OSL', 'AER', 'VIE', 'ZRH', 'LPA', 'CPH', 'MXP', 'KBP', 'BRU',

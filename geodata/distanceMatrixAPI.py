@@ -2,8 +2,8 @@
 
 import os
 import urllib
-from dotenv import load_dotenv
-from FareMLPrediction.geodata.geo_data import GetIATACodeGeodata
+from dotenv import load_dotenv, find_dotenv
+from geodata.geo_data import GetIATACodeGeodata
 import datetime
 import json
 import traceback as tb
@@ -11,12 +11,12 @@ import traceback as tb
 class DistanceMatrixAPI(object):
 
     def __init__(self, iata_location_codes_list):
-        # secrets_folder_path = os.path.join(os.path.dirname(__file__), 'secrets')
-        # env_file_path = os.path.join(secrets_folder_path, 'secrets.txt')
-        # load_dotenv(dotenv_path=env_file_path)
+        secrets_folder_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'secrets')
+        env_file_path = os.path.abspath(os.path.join(secrets_folder_path, '.env'))
+        load_dotenv(dotenv_path=env_file_path)
+        self.api_key = os.getenv("API_KEY")
         getIATACodeGeodata = GetIATACodeGeodata()
         self.geodata_dict_list = getIATACodeGeodata.get_iata_codes_geodata(iata_location_codes_list)
-        self.api_key = os.getenv('API_KEY')
 
     def build_query_url(self, origin_iata_code, destination_iata_code, departure_time):
         base_url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
@@ -35,11 +35,16 @@ class DistanceMatrixAPI(object):
         return iata_geodata_str
 
     def make_query(self, query_url):
+        number_of_tries = 10
         try:
-            query_result = urllib.request.urlopen(query_url).read()
+            for current_try in range(number_of_tries):
+                try:
+                    query_result = urllib.request.urlopen(query_url).read()
+                    return query_result
+                except:
+                    print(f"query:\n {query_url}\n resulted error, try number: {current_try + 1}")
         except:
-            tb.print_exc()
-        return query_result
+            print(f"query:\n {query_url}\n resulted error, 10 retries has been made with no success")
 
     def get_travel_durations(self, origin_iata_code, destination_iata_code, departure_time):
         query_url = self.build_query_url(origin_iata_code, destination_iata_code, departure_time)
