@@ -2,3 +2,4 @@ pandas
 amadeus
 environ
 python-dotenv
+scikit-learn

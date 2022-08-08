@@ -2,7 +2,7 @@ import pandas as pd
 import datetime
 import os
 from amadeus import Client, ResponseError
-from geodata.distanceMatrixAPI import DistanceMatrixAPI
+from geodata.distance_matrix_api import DistanceMatrixAPI
 
 class PrepareDataset:
 
@@ -14,9 +14,10 @@ class PrepareDataset:
                                     'ORY', 'BCN', 'VKO', 'PMI', 'MUC', 'FCO', 'LIS', 'OSL', 'AER', 'VIE', 'ZRH', 'LPA', 'CPH', 'MXP', 'KBP', 'BRU',
                                     'AYT', 'ARN', 'NCE', 'BER', 'OTP', 'WAW', 'AGP', 'ESB', 'TFN', 'SIP', 'LYS', 'ADB', 'BGO', 'GVA', 'DUB', 'HEL',
                                     'CTA', 'KRR', 'MRS', 'IBZ', 'HAM', 'LIN', 'OPO']
-        airports_top_10_and_tel_aviv_iata_location_codes_list = ['TLV', 'LHR', 'CDG', 'AMS', 'FRA', 'IST', 'MAD', 'BCN', 'MUC', 'LGW', 'SVO', 'TLV', 'LHR', 'CDG', 'AMS', 'FRA']
+        airports_top_10_and_tel_aviv_iata_location_codes_list = ['LHR', 'CDG', 'AMS', 'FRA', 'IST', 'MAD', 'BCN', 'MUC', 'LGW', 'SVO', 'TLV', 'LHR', 'CDG', 'AMS', 'FRA']
         self.iata_location_codes_list = airports_top_10_and_tel_aviv_iata_location_codes_list
         self.distanceMatrixAPI = DistanceMatrixAPI(self.iata_location_codes_list)
+        self.time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     def get_price_offers_for_date(self, departure_date, adults):
         for location_code_src in self.iata_location_codes_list:
@@ -50,22 +51,23 @@ class PrepareDataset:
     def prepare_price_offer_list(self, data, origin_location_code, destination_location_code, departure_date, adults):
         price_offer_list = []
         distance_matrix_json_result = self.distanceMatrixAPI.get_travel_durations(origin_location_code, destination_location_code, departure_date)
-        for price_offer in data:
-            is_price_offer_valid = self.is_price_offer_valid(price_offer)
-            if is_price_offer_valid:
-                dict = {}
-                dict['origin_location_code'] = origin_location_code
-                dict['destination_location_code'] = destination_location_code
-                dict['departure_date'] = departure_date
-                dict['adults'] = adults
-                dict['currency'] = price_offer['price']['currency']
-                dict['total'] = price_offer['price']['total']
-                dict['base'] = price_offer['price']['base']
-                dict['validatingAirlineCodes'] = price_offer['validatingAirlineCodes'][0]
-                dict['distance'] = distance_matrix_json_result['rows'][0]['elements'][0]['distance']['value']
-                dict['duration'] = distance_matrix_json_result['rows'][0]['elements'][0]['duration']['value']
-                if (self.is_price_offer_unique(price_offer_list, dict['currency'], dict['total'], dict['base'], dict['validatingAirlineCodes'])):
-                    price_offer_list.append(dict)
+        if (distance_matrix_json_result['status'] != 'MAX_ROUTE_LENGTH_EXCEEDED'):
+            for price_offer in data:
+                is_price_offer_valid = self.is_price_offer_valid(price_offer)
+                if is_price_offer_valid:
+                    dict = {}
+                    dict['origin_location_code'] = origin_location_code
+                    dict['destination_location_code'] = destination_location_code
+                    dict['departure_date'] = departure_date
+                    dict['adults'] = adults
+                    dict['currency'] = price_offer['price']['currency']
+                    dict['total'] = price_offer['price']['total']
+                    dict['base'] = price_offer['price']['base']
+                    dict['validatingAirlineCodes'] = price_offer['validatingAirlineCodes'][0]
+                    dict['distance'] = distance_matrix_json_result['rows'][0]['elements'][0]['distance']['value']
+                    dict['duration'] = distance_matrix_json_result['rows'][0]['elements'][0]['duration']['value']
+                    if (self.is_price_offer_unique(price_offer_list, dict['currency'], dict['total'], dict['base'], dict['validatingAirlineCodes'])):
+                        price_offer_list.append(dict)
         return price_offer_list
 
     def is_price_offer_valid(self, price_offer):
@@ -100,9 +102,8 @@ class PrepareDataset:
             return df, has_price_offers
 
     def store_df_to_csv(self, df):
-        # time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        # data_file_name = f"flight_offers_{time_str}.csv"
-        data_file_name = f"flight_offers.csv"
+        data_file_name = f"flight_offers_{self.time_str}.csv"
+        # data_file_name = f"flight_offers.csv"
         data_file_path = os.path.join(self.data_folder_path, data_file_name)
         if (self.first_csv_write):
             df.to_csv(data_file_path, index=False)
