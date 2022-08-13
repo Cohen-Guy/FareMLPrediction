@@ -14,7 +14,7 @@ class PrepareDataset:
                                     'ORY', 'BCN', 'VKO', 'PMI', 'MUC', 'FCO', 'LIS', 'OSL', 'AER', 'VIE', 'ZRH', 'LPA', 'CPH', 'MXP', 'KBP', 'BRU',
                                     'AYT', 'ARN', 'NCE', 'BER', 'OTP', 'WAW', 'AGP', 'ESB', 'TFN', 'SIP', 'LYS', 'ADB', 'BGO', 'GVA', 'DUB', 'HEL',
                                     'CTA', 'KRR', 'MRS', 'IBZ', 'HAM', 'LIN', 'OPO']
-        airports_top_10_and_tel_aviv_iata_location_codes_list = ['LHR', 'CDG', 'AMS', 'FRA', 'IST', 'MAD', 'BCN', 'MUC', 'LGW', 'SVO', 'TLV', 'LHR', 'CDG', 'AMS', 'FRA']
+        airports_top_10_and_tel_aviv_iata_location_codes_list = ['LHR', 'CDG', 'AMS', 'FRA', 'IST', 'MAD', 'BCN', 'MUC', 'LGW', 'SVO', 'TLV']
         self.iata_location_codes_list = airports_top_10_and_tel_aviv_iata_location_codes_list
         self.distanceMatrixAPI = DistanceMatrixAPI(self.iata_location_codes_list)
         self.time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
