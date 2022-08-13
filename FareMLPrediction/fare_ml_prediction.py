@@ -75,8 +75,8 @@ class FareMLPrediction:
         return classifier
 
     def train_xgboost_regressor(self, X_train, y_train):
-        classifier = XGBRegressor(colsample_bytree=3, gamma=3.054590158434759, learning_rate=1, max_depth=5, min_child_weight=3, n_estimators=1,
-                                  reg_alpha=180, reg_lambda=0.09015053544091692, subsample=0.9953558795262443)
+        classifier = XGBRegressor(colsample_bytree=4, gamma=7.549847309471019, learning_rate=4, max_depth=7, min_child_weight=6, n_estimators=4,
+                                  reg_alpha=111, reg_lambda=0.6663906133223992, subsample=0.9818632459626231)
         classifier.fit(X_train, y_train)
         return classifier
 
@@ -136,7 +136,7 @@ class FareMLPrediction:
             'min_child_weight': hp.choice('min_child_weight', np.arange(1, 8, 1, dtype=int)),
             'colsample_bytree': hp.choice('colsample_bytree', np.arange(0.3, 0.8, 0.1)),
             'subsample': hp.uniform('subsample', 0.8, 1),
-            'n_estimators': hp.choice('n_estimators', (50, 100, 180)),
+            'n_estimators': hp.choice('n_estimators', (1, 3, 5, 7, 10)),
             'gamma': hp.uniform('gamma', 1, 9),
             'reg_alpha': hp.quniform('reg_alpha', 40, 180, 1),
             'reg_lambda': hp.uniform('reg_lambda', 0, 1),
@@ -156,5 +156,5 @@ class FareMLPrediction:
 
 if __name__ == "__main__":
     fareMLPrediction = FareMLPrediction()
-    # fareMLPrediction.hyperparameters_optimization()
-    fareMLPrediction.ml_flow()
+    fareMLPrediction.hyperparameters_optimization()
+    # fareMLPrediction.ml_flow()
