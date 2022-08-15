@@ -3,6 +3,8 @@ amadeus
 environ
 python-dotenv
 scikit-learn
-seaborn
 xgboost
 hyperopt
+shap
+matplotlib
+plotly

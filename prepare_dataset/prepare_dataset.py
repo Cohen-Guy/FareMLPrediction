@@ -3,10 +3,12 @@ import datetime
 import os
 from amadeus import Client, ResponseError
 from geodata.distance_matrix_api import DistanceMatrixAPI
+import shap
 
 class PrepareDataset:
 
     def __init__(self):
+        self.time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.amadeus_client = Client(client_id='rPUxmofxNT5y0SVlynGKGVxYYwpdv81r', client_secret='fGyqtjXAceJKYq4d')
         self.data_folder_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'prepare')
         self.first_csv_write = True
@@ -17,7 +19,6 @@ class PrepareDataset:
         airports_top_10_and_tel_aviv_iata_location_codes_list = ['LHR', 'CDG', 'AMS', 'FRA', 'IST', 'MAD', 'BCN', 'MUC', 'LGW', 'SVO', 'TLV']
         self.iata_location_codes_list = airports_top_10_and_tel_aviv_iata_location_codes_list
         self.distanceMatrixAPI = DistanceMatrixAPI(self.iata_location_codes_list)
-        self.time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     def get_price_offers_for_date(self, departure_date, adults):
         for location_code_src in self.iata_location_codes_list:
