@@ -11,9 +11,10 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
 from sklearn.ensemble import RandomForestRegressor
-from hyperopt import hp, fmin, tpe, STATUS_OK, STATUS_FAIL, Trials
 import shap
 import matplotlib.pyplot as plt
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn.model_selection import StratifiedKFold
 
 class FareMLPrediction:
 
@@ -79,8 +80,7 @@ class FareMLPrediction:
         return model
 
     def train_xgboost_regressor(self, X_train, y_train):
-        model = XGBRegressor(colsample_bytree=4, gamma=5.911900209795379, learning_rate=5, max_depth=8, min_child_weight=6, n_estimators=4,
-                                  reg_alpha=166, reg_lambda=0.9487098300929906, subsample=0.8635430029000232)
+        model = XGBRegressor(colsample_bytree=0.7, learning_rate=0.07, max_depth=7, min_child_weight=4, n_estimators=100)
         model.fit(X_train, y_train)
         return model
 
@@ -158,60 +158,30 @@ class FareMLPrediction:
         print(f"test_root_mean_square_error: {test_root_mean_square_error}")
         return model, X_test, y_test
 
-    def process(self, fn_name, space, trials, algo, max_evals):
-        fn = getattr(self, fn_name)
-        try:
-            result = fmin(fn=fn, space=space, algo=algo, max_evals=max_evals, trials=trials)
-        except Exception as e:
-            return {'status': STATUS_FAIL,
-                    'exception': str(e)}
-        return result, trials
-
-    def xgb_reg(self, para):
-        reg = XGBRegressor(**para['reg_params'])
-        return self.train_reg(reg, para)
-
-    def train_reg(self, reg, para):
-        reg.fit(self.X_train, self.y_train,
-                eval_set=[(self.X_train, self.y_train), (self.X_test, self.y_test)],
-                **para['fit_params'])
-        pred = reg.predict(self.X_test)
-        loss = para['loss_func'](self.y_test, pred)
-        return {'loss': loss, 'status': STATUS_OK}
-
     def hyperparameters_optimization(self):
         X_train, X_test, y_train, y_test = self.preprocessing(self.dataset)
-        self.X_train = X_train
-        self.X_test = X_test
-        self.y_train = y_train
-        self.y_test = y_test
-        # XGB parameters
-        xgb_reg_params = {
-            'learning_rate': hp.choice('learning_rate', np.arange(0.05, 0.31, 0.05)),
-            'max_depth': hp.choice('max_depth', np.arange(5, 16, 1, dtype=int)),
-            'min_child_weight': hp.choice('min_child_weight', np.arange(1, 8, 1, dtype=int)),
-            'colsample_bytree': hp.choice('colsample_bytree', np.arange(0.3, 0.8, 0.1)),
-            'subsample': hp.uniform('subsample', 0.8, 1),
-            'n_estimators': hp.choice('n_estimators', (1, 3, 5, 7, 10)),
-            'gamma': hp.uniform('gamma', 1, 9),
-            'reg_alpha': hp.quniform('reg_alpha', 40, 180, 1),
-            'reg_lambda': hp.uniform('reg_lambda', 0, 1),
-        }
-        xgb_fit_params = {
-            'eval_metric': 'rmse',
-            'early_stopping_rounds': 10,
-            'verbose': False
-        }
-        xgb_para = dict()
-        xgb_para['reg_params'] = xgb_reg_params
-        xgb_para['fit_params'] = xgb_fit_params
-        xgb_para['loss_func'] = lambda y, pred: np.sqrt(mean_squared_error(y, pred))
+        parameters = {'objective': ['reg:squarederror'],
+                      'learning_rate': [.03, 0.05, .07],  # so called `eta` value
+                      'max_depth': [5, 6, 7],
+                      'min_child_weight': [4],
+                      'subsample': [0.7],
+                      'colsample_bytree': [0.7],
+                      'n_estimators': [1, 4, 10, 50, 100, 500]}
 
-        xgb_opt = self.process(fn_name='xgb_reg', space=xgb_para, trials=Trials(), algo=tpe.suggest, max_evals=500)
-        print(xgb_opt)
+        xgb = XGBRegressor()
+        random_search = GridSearchCV(xgb,
+                        parameters,
+                        cv=5,
+                        n_jobs=5,
+                        verbose=True)
+        # Here we go
+        random_search.fit(X_train, y_train)
+        print(random_search.best_params_)
+        pass
+
 
 if __name__ == "__main__":
     fareMLPrediction = FareMLPrediction()
-    fareMLPrediction.hyperparameters_optimization()
-    # model, X_test, y_test = fareMLPrediction.ml_flow()
+    # fareMLPrediction.hyperparameters_optimization()
+    model, X_test, y_test = fareMLPrediction.ml_flow()
     # fareMLPrediction.explainability(model, X_test, y_test)

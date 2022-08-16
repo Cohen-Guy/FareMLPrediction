@@ -4,7 +4,7 @@ environ
 python-dotenv
 scikit-learn
 xgboost
-hyperopt
+ray
 shap
 matplotlib
 plotly
