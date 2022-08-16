@@ -14,7 +14,6 @@ from sklearn.ensemble import RandomForestRegressor
 import shap
 import matplotlib.pyplot as plt
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
-from sklearn.model_selection import StratifiedKFold
 
 class FareMLPrediction:
 
