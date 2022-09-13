@@ -64,11 +64,10 @@ class DistanceMatrixAPI(object):
 
     def get_distance_between_iata_codes(self, origin_iata_code, destination_iata_code):
         origin_geodata_dict = next((geodata_dict for geodata_dict in self.geodata_dict_list if geodata_dict['iata_code'] == origin_iata_code), None)
-        origin_location = (origin_geodata_dict['Latitude'], origin_geodata_dict['Longitude'])
+        origin_location = origin_geodata_dict['Latitude'], origin_geodata_dict['Longitude']
         destination_geodata_dict = next((geodata_dict for geodata_dict in self.geodata_dict_list if geodata_dict['iata_code'] == destination_iata_code), None)
-        destination_location = (destination_geodata_dict['Latitude'], destination_geodata_dict['Longitude'])
-        distance = geodesic(origin_location, destination_location).kilometers
-        return distance
+        destination_location = destination_geodata_dict['Latitude'], destination_geodata_dict['Longitude']
+        return geodesic(origin_location, destination_location).kilometers
 
     def calculate_dist_matrix(self):
         dist_df = pd.DataFrame()

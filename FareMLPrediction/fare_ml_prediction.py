@@ -22,13 +22,13 @@ class FareMLPrediction:
         self.debug_flag = True
         dataset_csv_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'flight_offers.csv')
         self.dataset = pd.read_csv(dataset_csv_file_path)
-        self.selected_features = ['origin_location_code', 'destination_location_code', 'departure_date', 'distance'] # 'validatingAirlineCodes',
+        self.selected_features = ['origin_location_code', 'destination_location_code', 'departure_date', 'validatingAirlineCodes', 'distance'] # 'validatingAirlineCodes',
 
     def filter_dataset_by_airline_code(self, dataset, airline_code):
         return dataset[dataset['validatingAirlineCodes'] == airline_code]
 
-    def cleaning(self, dataset):
-        return dataset[dataset['validatingAirlineCodes'] != 'SVO']
+    # def cleaning(self, dataset):
+    #     return dataset[dataset['validatingAirlineCodes'] != 'SVO']
 
     def dataset_extract_target(self, dataset):
         target_col_name = 'total'
@@ -43,6 +43,7 @@ class FareMLPrediction:
         X['year'] = X['departure_date'].dt.year
         X['month'] = X['departure_date'].dt.month
         X['day'] = X['departure_date'].dt.day
+        X['weekday'] = X['departure_date'].dt.weekday
         X.pop('departure_date')
         return X
 
@@ -58,14 +59,12 @@ class FareMLPrediction:
         return X
 
     def preprocessing(self, dataset):
-        predict_for_airline_code = 'AF'
-        dataset = self.filter_dataset_by_airline_code(dataset, predict_for_airline_code)
-        dataset = self.cleaning(dataset)
+        # predict_for_airline_code = 'AF'
+        # dataset = self.filter_dataset_by_airline_code(dataset, predict_for_airline_code)
+        # dataset = self.cleaning(dataset)
         X, y = self.dataset_extract_target(dataset)
         X = self.feature_selection(X)
-        categorical_columns_names = ['origin_location_code', 'destination_location_code',
-                                     #'validatingAirlineCodes'
-                                     ]
+        categorical_columns_names = ['origin_location_code', 'destination_location_code', 'validatingAirlineCodes']
         X = self.feature_engineering(X)
         X = self.encoding(X, categorical_columns_names)
         # excluded_column = 'departure_date'
@@ -151,9 +150,9 @@ class FareMLPrediction:
     def ml_flow(self):
         X_train, X_test, y_train, y_test = self.preprocessing(self.dataset)
         model = self.train_xgboost_regressor(X_train, y_train)
-        X, train_root_mean_square_error = self.evaluate_train(model, X_train, y_train)
+        X_train, train_root_mean_square_error = self.evaluate_train(model, X_train, y_train)
         print(f"train_root_mean_square_error: {train_root_mean_square_error}")
-        X, test_root_mean_square_error = self.evaluate_test(model, X_test, y_test)
+        X_test, test_root_mean_square_error = self.evaluate_test(model, X_test, y_test)
         print(f"test_root_mean_square_error: {test_root_mean_square_error}")
         return model, X_test, y_test
 
@@ -173,10 +172,8 @@ class FareMLPrediction:
                         cv=5,
                         n_jobs=5,
                         verbose=True)
-        # Here we go
         random_search.fit(X_train, y_train)
         print(random_search.best_params_)
-        pass
 
 
 if __name__ == "__main__":
